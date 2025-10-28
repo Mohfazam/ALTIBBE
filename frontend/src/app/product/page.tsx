@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Check, FileText } from "lucide-react";
 
 // Type definitions
@@ -136,6 +136,22 @@ export default function ProductPage() {
   const [errors, setErrors] = useState<Errors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [countdown, setCountdown] = useState(5);
+  const [productId, setProductId] = useState("");
+
+  useEffect(() => {
+    if (submitSuccess && countdown > 0) {
+      const timer = setTimeout(() => {
+        setCountdown(countdown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (submitSuccess && countdown === 0) {
+      // Store product ID and redirect to PDF page
+      sessionStorage.setItem('productId', productId);
+      sessionStorage.setItem('productData', JSON.stringify(formData));
+      window.location.href = "/pdf";
+    }
+  }, [submitSuccess, countdown, productId, formData]);
 
   const getVisibleQuestions = (step: number): Question[] => {
     return QUESTIONS.filter((q) => {
@@ -219,8 +235,10 @@ export default function ProductPage() {
     setIsSubmitting(true);
 
     try {
-      // Simulate API call
+      // Simulate API call to create product
       await new Promise((resolve) => setTimeout(resolve, 1500));
+      const generatedId = `PROD-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
+      setProductId(generatedId);
       console.log("Product created:", formData);
       setSubmitSuccess(true);
     } catch (error) {
@@ -229,6 +247,12 @@ export default function ProductPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleGoNow = () => {
+    sessionStorage.setItem('productId', productId);
+    sessionStorage.setItem('productData', JSON.stringify(formData));
+    window.location.href = "/pdf";
   };
 
   const renderField = (question: Question) => {
@@ -390,17 +414,40 @@ export default function ProductPage() {
             </div>
 
             <div className="p-8 text-center">
-              <p className="text-slate-600 mb-6">
-                Your product has been successfully created and saved to the database.
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-slate-600 mb-2">Product ID</p>
+                <p className="text-xl font-bold text-blue-600">{productId}</p>
+              </div>
+
+              <p className="text-slate-600 mb-2">
+                Generating your PDF report...
               </p>
+              
+              <div className="bg-slate-100 rounded-lg p-4 mb-6">
+                <p className="text-sm text-slate-500 mb-2">Auto-redirecting in</p>
+                <div className="flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-blue-600 flex items-center justify-center">
+                    <span className="text-3xl font-bold text-white">{countdown}</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleGoNow}
+                className="w-full py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-all shadow-md mb-3"
+              >
+                Generate PDF Now
+              </button>
+
               <button
                 onClick={() => {
                   setSubmitSuccess(false);
                   setCurrentStep(1);
                   setFormData({});
                   setErrors({});
+                  setCountdown(5);
                 }}
-                className="w-full py-3 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 transition-all shadow-md"
+                className="w-full py-3 border-2 border-slate-300 text-slate-700 font-semibold rounded-md hover:bg-slate-50 transition-all"
               >
                 Create Another Product
               </button>
