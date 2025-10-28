@@ -14,5 +14,5 @@ app.use(express_1.default.json());
 app.use("/auth", authHandler_1.authHandler);
 app.use("/product", productHandler_1.productHandler);
 app.use("/pdf", pdfHandler_1.pdfHandler);
-const PORT = 3000;
+const PORT = 4000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

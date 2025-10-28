@@ -38,26 +38,23 @@ exports.pdfHandler.post("/:productId", (req, res) => __awaiter(void 0, void 0, v
         doc.moveDown();
         product.answers.forEach((a) => doc.text(`${a.questionKey}: ${JSON.stringify(a.answer)}`));
         doc.end();
-        // Wait until PDF writing fully completes
         writeStream.on("close", () => __awaiter(void 0, void 0, void 0, function* () {
-            console.log("✅ PDF generated successfully:", filePath);
-            // Store in DB
+            console.log("PDF generated successfully:", filePath);
             yield prisma.report.create({
                 data: { productId, pdfPath: filePath },
             });
-            // Send file as download
             res.download(filePath, `${product.title}.pdf`, (err) => {
                 if (err)
                     console.error("❌ Error sending file:", err);
             });
         }));
         writeStream.on("error", (err) => {
-            console.error("❌ PDF generation error:", err);
+            console.error("PDF generation error:", err);
             res.status(500).json({ error: "Failed to generate PDF" });
         });
     }
     catch (err) {
-        console.error("❌ Unexpected error:", err);
+        console.error("Unexpected error:", err);
         res.status(500).json({ error: "Internal server error" });
     }
 }));
